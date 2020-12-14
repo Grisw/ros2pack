@@ -2,7 +2,11 @@
 
 ## Install
 
-1. `pip install git+https://github.com/Robot-Course/ros2pack.git`
+`pip install git+https://github.com/Robot-Course/ros2pack.git`
+
+## Uninstall
+
+`pip uninstall ros2pack`
 
 ## Usage
 
