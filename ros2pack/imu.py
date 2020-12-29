@@ -1,5 +1,6 @@
 import roslibpy
 import math
+import time
 
 
 class IMU:
@@ -12,8 +13,12 @@ class IMU:
         self.RPY = (0, 0, 0)
         self.angular_velocity = (0, 0, 0)
         self.linear_acceleration = (0, 0, 0)
+        self.received = False
+        while not self.received:
+            time.sleep(0.1)
 
     def _on_msg(self, msg):
+        self.received = True
         self.RPY = self.quaternion_to_euler(msg['orientation']['w'], msg['orientation']['x'], msg['orientation']['y'], msg['orientation']['z'])
         self.angular_velocity = msg['angular_velocity']['x'], msg['angular_velocity']['y'], msg['angular_velocity']['z']
         self.linear_acceleration = msg['linear_acceleration']['x'], msg['linear_acceleration']['y'], msg['linear_acceleration']['z']
