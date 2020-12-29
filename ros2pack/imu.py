@@ -30,5 +30,9 @@ class IMU:
 
         return roll, pitch, yaw
 
-    def __del__(self):
+    def close(self):
+        self.listener.unsubscribe()
         self.ros.terminate()
+
+    def __del__(self):
+        self.close()

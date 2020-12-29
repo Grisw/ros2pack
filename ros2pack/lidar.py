@@ -34,5 +34,9 @@ class Lidar:
             if cv2.waitKey(1) == 27:
                 break
 
-    def __del__(self):
+    def close(self):
+        self.listener.unsubscribe()
         self.ros.terminate()
+
+    def __del__(self):
+        self.close()

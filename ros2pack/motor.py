@@ -12,6 +12,9 @@ class Motor:
         if self.ros.is_connected:
             self.talker.publish(roslibpy.Message({'linear': {'x': linear}, 'angular': {'z': angular}}))
 
-    def __del__(self):
+    def close(self):
         self.talker.unadvertise()
         self.ros.terminate()
+
+    def __del__(self):
+        self.close()
