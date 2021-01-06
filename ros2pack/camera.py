@@ -35,6 +35,8 @@ class Camera:
     def close(self):
         self.listener.unsubscribe()
         self.ros.terminate()
+        while self.ros.is_connected:
+            time.sleep(0.1)
 
     def __del__(self):
         self.close()

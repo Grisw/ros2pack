@@ -2,6 +2,7 @@ import roslibpy
 import numpy as np
 import cv2
 import math
+import time
 
 
 class Lidar:
@@ -12,8 +13,12 @@ class Lidar:
         self.listener = roslibpy.Topic(self.ros, '/scan', 'sensor_msgs/msg/LaserScan')
         self.listener.subscribe(self._on_msg)
         self.distances = [0] * 360
+        self.received = False
+        while not self.received:
+            time.sleep(0.1)
 
     def _on_msg(self, msg):
+        self.received = True
         self.distances = msg['ranges']
 
     def show(self):
@@ -37,6 +42,8 @@ class Lidar:
     def close(self):
         self.listener.unsubscribe()
         self.ros.terminate()
+        while self.ros.is_connected:
+            time.sleep(0.1)
 
     def __del__(self):
         self.close()
