@@ -5,6 +5,8 @@ import pygame
 from pygame.locals import *
 from OpenGL.GL import *
 from OpenGL.GLU import *
+from OpenGL.GLUT import *
+import numpy as np
 
 
 class IMU:
@@ -15,6 +17,7 @@ class IMU:
         self.listener = roslibpy.Topic(self.ros, '/imu', 'sensor_msgs/msg/Imu')
         self.listener.subscribe(self._on_msg)
         self.RPY = (0, 0, 0)
+        self.quaternion = (0, 0, 0, 0)
         self.angular_velocity = (0, 0, 0)
         self.linear_acceleration = (0, 0, 0)
         self.received = False
@@ -23,6 +26,7 @@ class IMU:
 
     def _on_msg(self, msg):
         self.received = True
+        self.quaternion = msg['orientation']['w'], msg['orientation']['x'], msg['orientation']['y'], msg['orientation']['z']
         self.RPY = self.quaternion_to_euler(msg['orientation']['w'], msg['orientation']['x'], msg['orientation']['y'], msg['orientation']['z'])
         self.angular_velocity = msg['angular_velocity']['x'], msg['angular_velocity']['y'], msg['angular_velocity']['z']
         self.linear_acceleration = msg['linear_acceleration']['x'], msg['linear_acceleration']['y'], msg['linear_acceleration']['z']
@@ -41,41 +45,47 @@ class IMU:
 
     def show(self):
         verticies = (
-            (1, -0.1, -0.7),
-            (1, 0.1, -0.7),
-            (-1, 0.1, -0.7),
-            (-1, -0.1, -0.7),
-            (1, -0.1, 0.7),
-            (1, 0.1, 0.7),
-            (-1, -0.1, 0.7),
-            (-1, 0.1, 0.7)
+            (-0.7, 1, -0.1),
+            (-0.7, 1, 0.1),
+            (-0.7, -1, 0.1),
+            (-0.7, -1, -0.1),
+            (0.7, 1, -0.1),
+            (0.7, 1, 0.1),
+            (0.7, -1, -0.1),
+            (0.7, -1, 0.1)
             )
 
-        edges = (
-            (0,1),
-            (0,3),
-            (0,4),
-            (2,1),
-            (2,3),
-            (2,7),
-            (6,3),
-            (6,4),
-            (6,7),
-            (5,1),
-            (5,4),
-            (5,7)
-            )
+        quads = (
+            (0, 3, 6, 4),
+            (1, 2, 7, 5),
+            (0, 1, 2, 3),
+            (4, 5, 7, 6),
+            (0, 1, 5, 4),
+            (2, 3, 6, 7)
+        )
+
+        colors = (
+            (0, 100, 255, 255),
+            (0, 100, 255, 255),
+            (128, 128, 128, 255),
+            (128, 128, 128, 255),
+            (128, 128, 128, 255),
+            (128, 128, 128, 255)
+        )
 
         def Cube():
-            glBegin(GL_LINES)
-            for edge in edges:
-                for vertex in edge:
+            glBegin(GL_QUADS)
+            for quad, color in zip(quads, colors):
+                for vertex in quad:
+                    glColor4ub(*color)
                     glVertex3fv(verticies[vertex])
             glEnd()
 
         pygame.init()
         display = (800, 600)
         pygame.display.set_mode(display, DOUBLEBUF | OPENGL)
+
+        glEnable(GL_DEPTH_TEST)
 
         gluPerspective(45, (display[0] / display[1]), 0.1, 50.0)
 
@@ -87,11 +97,28 @@ class IMU:
                     pygame.quit()
                     break
 
-            glPushMatrix()
-            glRotatef(self.RPY[0], 0, 0, 1)
-            glRotatef(self.RPY[1], 1, 0, 0)
-            glRotatef(self.RPY[2], 0, 1, 0)
+            matrix = np.array([
+                (self.quaternion[0] * self.quaternion[0]) + (self.quaternion[1] * self.quaternion[1]) - (self.quaternion[2] * self.quaternion[2]) - (self.quaternion[3] * self.quaternion[3]),
+                (2 * self.quaternion[1] * self.quaternion[2]) + (2 * self.quaternion[0] * self.quaternion[3]),
+                (2 * self.quaternion[1] * self.quaternion[3]) - (2 * self.quaternion[0] * self.quaternion[2]),
+                0,
+                (2 * self.quaternion[1] * self.quaternion[2]) - (2 * self.quaternion[0] * self.quaternion[3]),
+                (self.quaternion[0] * self.quaternion[0]) - (self.quaternion[1] * self.quaternion[1]) + (self.quaternion[2] * self.quaternion[2]) - (self.quaternion[3] * self.quaternion[3]),
+                (2 * self.quaternion[2] * self.quaternion[3]) + (2 * self.quaternion[0] * self.quaternion[1]),
+                0,
+                (2 * self.quaternion[1] * self.quaternion[3]) + (2 * self.quaternion[0] * self.quaternion[2]),
+                (2 * self.quaternion[2] * self.quaternion[3]) - (2 * self.quaternion[0] * self.quaternion[1]),
+                (self.quaternion[0] * self.quaternion[0]) - (self.quaternion[1] * self.quaternion[1]) - (self.quaternion[2] * self.quaternion[2]) + (self.quaternion[3] * self.quaternion[3]),
+                0,
+                0,
+                0,
+                0,
+                1
+            ])
+
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+            glPushMatrix()
+            glMultMatrixf(matrix)
             Cube()
             glPopMatrix()
             pygame.display.flip()
