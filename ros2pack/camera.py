@@ -1,4 +1,5 @@
 import roslibpy
+from .rosbridge import ROS
 import cv2
 import numpy as np
 import time
@@ -7,8 +8,7 @@ import time
 class Camera:
 
     def __init__(self, host='localhost', port=9090):
-        self.ros = roslibpy.Ros(host=host, port=port)
-        self.ros.run()
+        self.ros = ROS(host=host, port=port).ros
         self.listener = roslibpy.Topic(self.ros, '/camera', 'sensor_msgs/msg/CompressedImage')
         self.listener.subscribe(self._on_msg)
         self.image = None
@@ -32,11 +32,7 @@ class Camera:
             if k == 27:
                 break
 
-    def close(self):
-        self.listener.unsubscribe()
-        self.ros.terminate()
-        while self.ros.is_connected:
-            time.sleep(0.1)
-
     def __del__(self):
-        self.close()
+        self.listener.unsubscribe()
+        while self.listener.is_subscribed:
+            time.sleep(0.1)

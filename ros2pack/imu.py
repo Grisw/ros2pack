@@ -1,19 +1,18 @@
 import roslibpy
+from .rosbridge import ROS
 import math
 import time
 import pygame
 from pygame.locals import *
 from OpenGL.GL import *
 from OpenGL.GLU import *
-from OpenGL.GLUT import *
 import numpy as np
 
 
 class IMU:
 
     def __init__(self, host='localhost', port=9090):
-        self.ros = roslibpy.Ros(host=host, port=port)
-        self.ros.run()
+        self.ros = ROS(host=host, port=port).ros
         self.listener = roslibpy.Topic(self.ros, '/imu', 'sensor_msgs/msg/Imu')
         self.listener.subscribe(self._on_msg)
         self.RPY = (0, 0, 0)
@@ -124,11 +123,7 @@ class IMU:
             pygame.display.flip()
             pygame.time.wait(10)
 
-    def close(self):
-        self.listener.unsubscribe()
-        self.ros.terminate()
-        while self.ros.is_connected:
-            time.sleep(0.1)
-
     def __del__(self):
-        self.close()
+        self.listener.unsubscribe()
+        while self.listener.is_subscribed:
+            time.sleep(0.1)

@@ -1,4 +1,5 @@
 import roslibpy
+from .rosbridge import ROS
 import numpy as np
 import cv2
 import math
@@ -8,8 +9,7 @@ import time
 class Lidar:
 
     def __init__(self, host='localhost', port=9090):
-        self.ros = roslibpy.Ros(host=host, port=port)
-        self.ros.run()
+        self.ros = ROS(host=host, port=port).ros
         self.listener = roslibpy.Topic(self.ros, '/scan', 'sensor_msgs/msg/LaserScan')
         self.listener.subscribe(self._on_msg)
         self.distances = [0] * 360
@@ -21,7 +21,7 @@ class Lidar:
         self.received = True
         self.distances = msg['ranges']
 
-    def show(self):
+    def show(self, winname='lidar'):
         center = (320, 320)
         point_size = 1
         point_color = (0, 0, 255)  # BGR
@@ -35,15 +35,11 @@ class Lidar:
                 p_x = d * 50 * -math.cos(i * (2 * math.pi) / 360)
                 p_y = d * 50 * math.sin(i * (2 * math.pi) / 360)
                 cv2.circle(img, (int(center[0] + p_x), int(center[1] + p_y)), point_size, point_color, thickness)
-                cv2.imshow('image', img)
+                cv2.imshow(winname, img)
             if cv2.waitKey(1) == 27:
                 break
 
-    def close(self):
-        self.listener.unsubscribe()
-        self.ros.terminate()
-        while self.ros.is_connected:
-            time.sleep(0.1)
-
     def __del__(self):
-        self.close()
+        self.listener.unsubscribe()
+        while self.listener.is_subscribed:
+            time.sleep(0.1)
