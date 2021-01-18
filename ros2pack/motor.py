@@ -14,6 +14,7 @@ class Motor:
 
     def move(self, linear, angular):
         self.talker.publish(roslibpy.Message({'linear': {'x': float(linear)}, 'angular': {'z': float(angular)}}))
+        time.sleep(0.01)
 
     def __del__(self):
         self.talker.unadvertise()
