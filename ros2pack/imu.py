@@ -1,5 +1,4 @@
 import roslibpy
-from .rosbridge import ROS
 import math
 import time
 import pygame
@@ -11,8 +10,8 @@ import numpy as np
 
 class IMU:
 
-    def __init__(self, host='localhost', port=9090):
-        self.ros = ROS(host=host, port=port).ros
+    def __init__(self, robot):
+        self.ros = robot.ros
         self.listener = roslibpy.Topic(self.ros, '/imu', 'sensor_msgs/msg/Imu')
         self.listener.subscribe(self._on_msg)
         self.RPY = (0, 0, 0)

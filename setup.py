@@ -12,6 +12,6 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     packages=setuptools.find_packages(),
-    install_requires=['roslibpy', 'opencv-python', 'numpy==1.19.3', 'pygame', 'pyopengl'],
+    install_requires=['roslibpy', 'opencv-python', 'numpy==1.19.3', 'pygame', 'pyopengl', 'matplotlib'],
     python_requires='>=3'
 )

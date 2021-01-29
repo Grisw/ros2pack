@@ -1,5 +1,4 @@
 import roslibpy
-from .rosbridge import ROS
 import numpy as np
 import cv2
 import math
@@ -8,8 +7,8 @@ import time
 
 class Lidar:
 
-    def __init__(self, host='localhost', port=9090):
-        self.ros = ROS(host=host, port=port).ros
+    def __init__(self, robot):
+        self.ros = robot.ros
         self.listener = roslibpy.Topic(self.ros, '/scan', 'sensor_msgs/msg/LaserScan')
         self.listener.subscribe(self._on_msg)
         self.distances = [0] * 360

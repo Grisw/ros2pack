@@ -1,5 +1,4 @@
 import roslibpy
-from .rosbridge import ROS
 import cv2
 import numpy as np
 import time
@@ -7,8 +6,8 @@ import time
 
 class Camera:
 
-    def __init__(self, host='localhost', port=9090):
-        self.ros = ROS(host=host, port=port).ros
+    def __init__(self, robot):
+        self.ros = robot.ros
         self.listener = roslibpy.Topic(self.ros, '/camera', 'sensor_msgs/msg/CompressedImage')
         self.listener.subscribe(self._on_msg)
         self.image = None
